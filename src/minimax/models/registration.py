@@ -36,8 +36,9 @@ def make(
 	env_name, model_name=None, **model_kwargs):
 	env_group_id = env_name.split('-')[0].lstrip('UED')
 	model_id = model_name
-
 	register_id = _get_register_id(env_group_id, model_id)
+	print(f"*****REGL{registered_models}")
+	print(f"env_name: {env_name}, model_name: {model_name}, register_id:{register_id}, env_group_id:{env_group_id}, model_id:{model_id}")
 	if register_id not in registered_models:
 		raise ValueError(f'No model for {register_id} found.')
 	else:

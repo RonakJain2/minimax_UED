@@ -107,7 +107,7 @@ class DRRunner:
 			n_envs=self.n_parallel,
 			n_eval=self.n_eval,
 			action_space=self.env.action_space(),
-			obs_space=self.env.observation_space(),
+			obs_space=self.env.observation_space(self.env_params),
 			agent=self.student_pop.agent,
 		)
 

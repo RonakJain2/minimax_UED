@@ -15,10 +15,9 @@ LICENSE file in the root directory of this source tree.
 
 import jax
 import chex
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, TypeVar, Generic
 from functools import partial
 from flax import struct
-
 
 @struct.dataclass
 class EnvState:

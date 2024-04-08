@@ -20,12 +20,12 @@ from minimax.models import s5
 from minimax.models.registration import register
 
 
-class GridWorldBasicModel(nn.Module):
+class MountainCarModel(nn.Module):
 	"""Split Actor-Critic Architecture for PPO."""
-	output_dim: int = 7 # make this 3 for car
+	output_dim: int = 3
 	n_hidden_layers: int = 1
 	hidden_dim: int = 32
-	n_conv_filters: int = 16  # make this 1 for car
+	n_conv_filters: int = 1
 	conv_kernel_size: int = 3
 	n_scalar_embeddings: int = 4
 	max_scalar: int = 4
@@ -164,7 +164,7 @@ class GridWorldBasicModel(nn.Module):
 		return self.recurrent_arch is not None
 
 
-class GridWorldACStudentModel(GridWorldBasicModel):
+class MountainCarStudentModel(MountainCarModel):
 	def __call__(self, x, carry=None, reset=None):
 		"""
 		Inputs:
@@ -208,59 +208,6 @@ class GridWorldACStudentModel(GridWorldBasicModel):
 		return v, logits, carry
 
 
-class GridWorldACTeacherModel(GridWorldBasicModel):
-	"""
-	Original teacher model from Dennis et al, 2020. It is identical ins
-	high-level spec to the student model, but with the additional fwd logic
-	of concatenating a noise vector.
-	"""
-	def __call__(self, x, carry=None, reset=None):
-		"""
-		Inputs:
-			x: B x h x w observations
-			hxs: B x hx_dim hidden states
-			masks: B length vector of done masks
-		"""
-		img = x['image']
-		time = x['time']
-		noise = x.get('noise')
-		aux = x.get('aux')
-
-		if self.rnn is not None:
-			batch_dims = img.shape[:2]
-			x = self.conv(img).reshape(*batch_dims, -1)
-		else:
-			batch_dims = img.shape[:1]
-			x = self.conv(img).reshape(*batch_dims, -1)
-
-		if self.fc_scalar is not None:
-			if self.n_scalar_embeddings == 0:
-				time /= self.max_scalar
-
-			scalar_emb = self.fc_scalar(time).reshape(*batch_dims, -1)
-			x = jnp.concatenate([x, scalar_emb], axis=-1)
-
-		if noise is not None:
-			noise = noise.reshape(*batch_dims, -1)
-			x = jnp.concatenate([x, noise], axis=-1)
-
-		if aux is not None:
-			x = jnp.concatenate([x, aux], axis=-1)
-
-		if self.rnn is not None:
-			if self.recurrent_arch == 's5':
-				x = self.embed_pre_s5(x)
-				carry, x = self.rnn(carry, x, reset)
-			else:
-				carry, x = self.rnn(carry, (x, reset))
-
-		logits = self.pi_head(x)
-
-		v = self.v_head(x)
-
-		return v, logits, carry
-
-
 # Register models
 if hasattr(__loader__, 'name'):
   module_path = __loader__.name
@@ -268,9 +215,6 @@ elif hasattr(__loader__, 'fullname'):
   module_path = __loader__.fullname
 
 register(
-	env_group_id='Maze', model_id='default_student_cnn', 
-	entry_point=module_path + ':GridWorldACStudentModel')
+	env_group_id='mountaincar', model_id='default_student_cnn', 
+	entry_point=module_path + ':MountainCarStudentModel')
 
-register(
-	env_group_id='Maze', model_id='default_teacher_cnn', 
-	entry_point=module_path + ':GridWorldACTeacherModel')

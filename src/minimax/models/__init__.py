@@ -9,15 +9,13 @@ LICENSE file in the root directory of this source tree.
 from .registration import register, make
 
 
-from .maze import (
-	GridWorldACStudentModel, 
-	GridWorldACTeacherModel,
+from .mountainCar import (
+	MountainCarStudentModel
 )
 
 
 __all__ = [
 	register,
 	make,
-	GridWorldACStudentModel,
-	GridWorldACTeacherModel,
+	MountainCarStudentModel
 ]
