@@ -143,14 +143,14 @@ class MountainCar(environment.Environment):
         """Action space of the environment."""
         return spaces.Discrete(3)
 
-    def observation_space(self, params: EnvParams, state: EnvState) -> spaces.Box:
+    def observation_space(self, params: EnvParams) -> spaces.Box:
         """Observation space of the environment."""
         low = jnp.array(
-            [state.min_position, -params.max_speed],
+            [-3, -params.max_speed],
             dtype=jnp.float32,
         )
         high = jnp.array(
-            [state.max_position, params.max_speed],
+            [10, params.max_speed],
             dtype=jnp.float32,
         )
         return spaces.Box(low, high, (2,), dtype=jnp.float32)
