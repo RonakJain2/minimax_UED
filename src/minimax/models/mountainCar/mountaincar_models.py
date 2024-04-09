@@ -25,11 +25,11 @@ class MountainCarModel(nn.Module):
 	output_dim: int = 3
 	n_hidden_layers: int = 1
 	hidden_dim: int = 32
-	n_conv_filters: int = 1
+	n_conv_filters: int = 0 # changed for mountain car
 	conv_kernel_size: int = 3
-	n_scalar_embeddings: int = 4
+	n_scalar_embeddings: int = 0 # changed for mountain car
 	max_scalar: int = 4
-	scalar_embed_dim: int = 5
+	scalar_embed_dim: int = 0 # changed for mountain car
 	recurrent_arch: str = None
 	recurrent_hidden_dim: int = 256
 	base_activation: str = 'relu'
@@ -172,27 +172,6 @@ class MountainCarStudentModel(MountainCarModel):
 			hxs: B x hx_dim hidden states
 			masks: B length vector of done masks
 		"""
-		old_x = x
-		img = x['image']
-		agent_dir = x['agent_dir']
-		aux = x.get('aux')
-
-		if self.rnn is not None:
-			batch_dims = img.shape[:2]
-			x = self.conv(img).reshape(*batch_dims, -1)
-		else:
-			batch_dims = img.shape[:1]
-			x = self.conv(img).reshape(*batch_dims, -1)
-
-		if self.fc_scalar is not None:
-			if self.n_scalar_embeddings == 0:
-				agent_dir /= self.max_scalar
-
-			scalar_emb = self.fc_scalar(agent_dir).reshape(*batch_dims, -1)
-			x = jnp.concatenate([x, scalar_emb], axis=-1)
-
-		if aux is not None:
-			x = jnp.concatenate([x, aux], axis=-1)
 			
 		if self.rnn is not None:
 			if self.recurrent_arch == 's5':

@@ -116,6 +116,9 @@ class MountainCar(environment.Environment):
 
     def get_obs(self, state: EnvState, params=None, key=None) -> chex.Array:
         """Return observation from raw state trafo."""
+
+
+        
         return jnp.array([state.position, state.velocity])
 
     def is_terminal(self, state: EnvState, params: EnvParams) -> jnp.ndarray:
