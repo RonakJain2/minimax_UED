@@ -25,11 +25,12 @@ class MountainCarModel(nn.Module):
 	output_dim: int = 3
 	n_hidden_layers: int = 1
 	hidden_dim: int = 32
-	n_conv_filters: int = 0
+
+	n_conv_filters: int = 0 # changed for mountain car
 	conv_kernel_size: int = 3
-	n_scalar_embeddings: int = 0
-	max_scalar: int = 0
-	scalar_embed_dim: int = 0
+	n_scalar_embeddings: int = 0 # changed for mountain car
+	max_scalar: int = 4
+	scalar_embed_dim: int = 0 # changed for mountain car
 	recurrent_arch: str = None
 	recurrent_hidden_dim: int = 256
 	base_activation: str = 'relu'
