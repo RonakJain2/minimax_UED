@@ -192,4 +192,5 @@ class Environment(object):
 
 	def get_env_metrics(self, state: EnvState):
 		"""Environment-specific metrics, e.g. number of walls."""
-		raise NotImplementedError
+		return {'Pass':1}
+		#raise NotImplementedError

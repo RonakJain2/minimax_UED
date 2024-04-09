@@ -140,14 +140,14 @@ runner_state = runner.reset(subrng)
 
 # # Train
 # df = pd.DataFrame(columns=col_names)
-# train_steps = 0
-# for i in range(N_UPDATES):
-# 	start = time.time()
-# 	stats, *runner_state = runner.run(*runner_state)
-# 	end = time.time()
+train_steps = 0
+for i in range(N_UPDATES):
+	start = time.time()
+	stats, *runner_state = runner.run(*runner_state)
+	end = time.time()
 
-# 	sps = 1/(end-start)*runner.step_batch_size*runner.n_rollout_steps
-# 	stats.update({'steps': train_steps, 'sps': sps})
+	sps = 1/(end-start)*runner.step_batch_size*runner.n_rollout_steps
+	stats.update({'steps': train_steps, 'sps': sps})
 
 # 	if i % EVAL_INTERVAL == 0:
 # 		params = runner_state[1].params

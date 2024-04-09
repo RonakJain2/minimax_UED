@@ -133,6 +133,7 @@ class Maze(environment.Environment):
 		action: int,
 	) -> Tuple[chex.Array, EnvState, float, bool, dict]:
 		"""Perform single timestep state transition."""
+
 		a = self.action_set[action]
 		state, reward = self.step_agent(key, state, a)
 		# Check game condition & no. steps for termination condition

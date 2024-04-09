@@ -13,13 +13,12 @@ from flax import struct
 import jax
 from jax import lax
 import jax.numpy as jnp
-from gymnax.environments import environment
-from gymnax.environments import spaces
+from minimax.envs import environment, spaces
 from minimax.envs.registration import register
 
 
 @struct.dataclass
-class EnvState(environment.EnvState):
+class EnvState:
     position: jnp.ndarray
     velocity: jnp.ndarray
     time: int
@@ -31,7 +30,7 @@ class EnvState(environment.EnvState):
 
 
 @struct.dataclass
-class EnvParams(environment.EnvParams):
+class EnvParams:
     max_speed: float = 0.07
     goal_velocity: float = 0.0
     force: float = 0.001
@@ -51,6 +50,8 @@ class MountainCar(environment.Environment):
     ):
         super().__init__()
 
+        
+
         self.params = EnvParams(
             max_speed=max_speed, 
             goal_velocity=goal_velocity, 
@@ -67,35 +68,38 @@ class MountainCar(environment.Environment):
         key: chex.PRNGKey,
         state: EnvState,
         action: Union[int, float, chex.Array],
-        params: EnvParams,
     ) -> Tuple[chex.Array, EnvState, jnp.ndarray, jnp.ndarray, Dict[Any, Any]]:
         """Perform single timestep state transition."""
         velocity = (
             state.velocity
-            + (action - 1) * params.force
-            - jnp.cos(3 * state.position) * params.gravity
+            + (action - 1) * self.params.force
+            - jnp.cos(3 * state.position) * state.gravity
         )
-        velocity = jnp.clip(velocity, -params.max_speed, params.max_speed)
+        velocity = jnp.clip(velocity, -self.params.max_speed, self.params.max_speed)
         position = state.position + velocity
-        position = jnp.clip(position, params.min_position, params.max_position)
-        velocity = velocity * (1 - (position == params.min_position) * (velocity < 0))
+        position = jnp.clip(position, state.min_position, state.max_position)
+        velocity = velocity * (1 - (position == state.min_position) * (velocity < 0))
 
         reward = -1.0
 
         # Update state dict and evaluate termination conditions
         state = EnvState(position=position, velocity=velocity, time=state.time + 1)
-        done = self.is_terminal(state, params)
+        done = self.is_terminal(state, self.params)
 
         return (
             lax.stop_gradient(self.get_obs(state)),
             lax.stop_gradient(state),
             jnp.array(reward),
             done,
-            {"discount": self.discount(state, params)},
+            {"discount": self.discount(state, self.params)},
         )
+    
+    def discount(self, state: EnvState, params: EnvParams) -> jnp.ndarray:
+        """Return a discount of zero if the episode has terminated."""
+        return jax.lax.select(self.is_terminal(state, params), 0.0, 1.0)
 
     def reset_env(
-        self, key: chex.PRNGKey, params: EnvParams
+        self, key: chex.PRNGKey
     ) -> Tuple[chex.Array, EnvState]:
         """Reset environment state by sampling initial position."""
         
