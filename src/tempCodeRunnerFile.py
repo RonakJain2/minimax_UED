@@ -18,7 +18,7 @@ from minimax.runners import DRRunner, EvalRunner
 SEED = 1
 N_ROLLOUT_STEPS = 250
 N_PARALLEL = 32
-N_UPDATES = 30_000
+N_UPDATES = 300
 
 LEARNING_RATE = 1e-4
 DISCOUNT = 0.995
@@ -139,4 +139,12 @@ for i in range(N_UPDATES):
 		display.clear_output(wait=True)
 
 logger.writekvs(stats) # Rewrite last stats to stdout, since refreshing plot cleared it
+
+# Final eval
+with jax.disable_jit(EVAL_RENDER_MODE is not None):
+	eval_runner = EvalRunner(render_mode=EVAL_RENDER_MODE, **eval_runner_kwargs)
+	rng = jax.random.PRNGKey(SEED)
+	params = runner_state[1].params
+	eval_stats = eval_runner.run(rng, params)
+	logger.writekvs(eval_stats)
 

@@ -19,6 +19,10 @@ import numpy as np
 from minimax.envs.viz.window import Window
 import minimax.envs.viz.grid_rendering as rendering
 from minimax.envs.maze.maze import OBJECT_TO_INDEX, COLOR_TO_INDEX, COLORS
+from gymnax.visualize import Visualizer
+from gymnax.environments.classic_control import mountain_car as mc_env
+import gymnax
+import yaml
 
 
 INDEX_TO_COLOR = [k for k,v in COLOR_TO_INDEX.items()]
@@ -33,6 +37,11 @@ class GridVisualizer:
 
 	def __init__(self):
 		self.window = None
+		self.params = None
+		self.states = []
+		self.rewards = []
+		self.currEnv = None
+		self.parent_env_name = None
 
 	def _lazy_init_window(self):
 		if self.window is None:
@@ -46,8 +55,43 @@ class GridVisualizer:
 		self._lazy_init_window()
 		self.window.save_img(path)
 
-	def render(self, params, state, highlight=True, tile_size=TILE_PIXELS, maze_map=None):
-		return self._render_state(params, state, highlight, tile_size, maze_map)
+	def render(self, params, state, parent_env_name= 'Maze', reward = 0, highlight=True, tile_size=TILE_PIXELS, maze_map=None):
+		if(parent_env_name == 'Maze'):
+			return self._render_state(params, state, highlight, tile_size, maze_map)
+		elif(parent_env_name == 'MountainCar'):
+			parent_env_name = 'MountainCar-v0'
+			env, _ = gymnax.make(parent_env_name)
+			new_state = mc_env.EnvState(position=state.position, velocity=state.velocity, time=state.time)
+			new_params= dict(min_position= float(state.min_position),
+								max_position = float(state.max_position),
+								max_speed = float(params.max_speed),
+								goal_position = float(state.goal_position),
+								goal_velocity = float(params.goal_velocity),
+								force = float(params.force),
+								gravity = float(state.gravity),
+								max_steps_in_episode = float(params.max_steps_in_episode))
+			#vis = Visualizer(env, new_params, [new_state], None)
+			#vis.animate(f"{parent_env_name}.gif")
+
+			self.params = new_params
+			self.states.append(new_state)
+			self.rewards.append(reward)
+			self.currEnv = env
+		
+	def customRender(self):
+		file_path = '/Users/ronakjain/Desktop/CS566/Project/minimax_UED/src/gym_envConfig.yaml'  
+
+		with open(file_path, 'w') as file:
+			yaml.dump(self.params, file, default_flow_style=False)
+
+		vis = Visualizer(self.currEnv, self.params, self.states, None)
+		vis.animate(f"{self.parent_env_name}.gif")
+		self.params = None
+		self.states = []
+		self.rewards = []
+		self.currEnv = None
+		self.parent_env_name = None
+
 
 	def render_grid(self, grid, tile_size=TILE_PIXELS, k_rot90=0, agent_dir_idx=None):
 		self._lazy_init_window()

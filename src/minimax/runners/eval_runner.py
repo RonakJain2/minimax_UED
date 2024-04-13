@@ -138,7 +138,8 @@ class EvalRunner:
 
         self.test_return_pre = 'test_return'
         self.test_solved_rate_pre = 'test_solved_rate'
-
+        
+        self.frames = []
         self.render_mode = render_mode
         if render_mode:
             from minimax.envs.viz.grid_viz import GridVisualizer
@@ -193,9 +194,10 @@ class EvalRunner:
                 done, zero_carry, next_carry)
 
         if self.render_mode:
+            parent_env_name = benv.env_name.split('-')[0]
             self.viz.render(
                 benv.env.params, 
-                jax.tree_util.tree_map(lambda x: x[0][0], state))
+                jax.tree_util.tree_map(lambda x: x[0][0], state), parent_env_name, reward)
             if self.render_mode == 'ipython':
                 self.ipython_display.display(self.viz.window.fig)
                 self.ipython_display.clear_output(wait=True)
@@ -298,6 +300,9 @@ class EvalRunner:
             env_name = self.ext_env_names[i]
             mean_return = ep_stats['return'].mean(1)
 
+            if self.render_mode:
+                self.viz.customRender()
+
             if self.env_has_solved_rate[i]:
                 mean_solved_rate = jax.vmap(jax.vmap(benv.env.eval_solved_rate))(ep_stats).mean(1)
 
@@ -305,6 +310,8 @@ class EvalRunner:
                 eval_stats[f'eval/a{idx}:{self.test_return_pre}:{env_name}'] = mean_return[idx].squeeze()
                 if self.env_has_solved_rate[i]:
                     eval_stats[f'eval/a{idx}:{self.test_solved_rate_pre}:{env_name}'] = mean_solved_rate[idx].squeeze()
+
+            
 
         return eval_stats
 

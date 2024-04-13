@@ -19,8 +19,8 @@ from minimax.envs.registration import register
 
 @struct.dataclass
 class EnvState:
-    position: jnp.ndarray
-    velocity: jnp.ndarray
+    position: float
+    velocity: float
     time: int
     min_position: float = -1.2  
     max_position: float = 0.6   
@@ -46,7 +46,7 @@ class MountainCar(environment.Environment):
         max_speed= 0.07,
         goal_velocity = 0.0,
         force = 0.001,
-        max_steps_in_episode = 200
+        max_steps_in_episode = 500
     ):
         super().__init__()
 
@@ -59,9 +59,9 @@ class MountainCar(environment.Environment):
             max_steps_in_episode=max_steps_in_episode)
 
     @property
-    def default_params(self) -> List[Union[EnvParams, EnvState]]:
+    def default_params(self):
         # Default environment parameters
-        return [EnvParams(), EnvState]
+        return EnvParams()
 
     def step_env(
         self,
@@ -73,7 +73,7 @@ class MountainCar(environment.Environment):
         velocity = (
             state.velocity
             + (action - 1) * self.params.force
-            - jnp.cos(3 * state.position) * state.gravity
+            + (3 * jnp.cos(3 * state.position) * 0.45 - 5 * jnp.sin(5 * state.position) * 0.2 + 7 * jnp.cos(7 * state.position) * 0.1)* (-state.gravity)
         )
         velocity = jnp.clip(velocity, -self.params.max_speed, self.params.max_speed)
         position = state.position + velocity
@@ -83,7 +83,7 @@ class MountainCar(environment.Environment):
         reward = -1.0
 
         # Update state dict and evaluate termination conditions
-        state = EnvState(position=position, velocity=velocity, time=state.time + 1)
+        state = state.replace(position=position, velocity=velocity, time=state.time + 1)
         done = self.is_terminal(state, self.params)
 
         return (
@@ -150,6 +150,10 @@ class MountainCar(environment.Environment):
         """Action space of the environment."""
         return spaces.Discrete(3)
 
+    def max_episode_steps(self):
+        return self.params.max_steps_in_episode
+    
+    
     def observation_space(self, params: EnvParams) -> spaces.Box:
         """Observation space of the environment."""
         low = jnp.array(
